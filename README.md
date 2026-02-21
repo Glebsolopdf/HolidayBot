@@ -5,9 +5,9 @@ This small bot posts daily holidays (from calend.ru) and exposes a `/today` comm
 
 Configuration (preferred):
 
-- Copy `.env.example` → `.env` and fill `BOT_TOKEN` and `TARGET_CHAT_ID`.
+- Copy `env.example` → `.env` and fill `BOT_TOKEN` and `TARGET_CHAT_ID`.
 - Or set environment variables `BOT_TOKEN`, `TARGET_CHAT_ID`, and optionally `HOLIDAY_CACHE_PATH`.
- - Copy `.env.example` → `.env` and fill `BOT_TOKEN` and `TARGET_CHAT_IDS`.
+ - Copy `env.example` → `.env` and fill `BOT_TOKEN` and `TARGET_CHAT_IDS`.
  - You can specify multiple chats in `.env` using `TARGET_CHAT_IDS` as a comma-separated list.
  - Or set environment variables `BOT_TOKEN`, `TARGET_CHAT_IDS`, and optionally `HOLIDAY_CACHE_PATH`.
 
