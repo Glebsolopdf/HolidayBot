@@ -46,7 +46,7 @@ Run
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env
+cp env.example .env
 # edit .env -> set BOT_TOKEN and TARGET_CHAT_ID(S)
 python main.py
 ```
@@ -85,7 +85,7 @@ Notes
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env
+cp env.example .env
 # отредактируйте .env -> укажите BOT_TOKEN и TARGET_CHAT_ID(S)
 python main.py
 ```
