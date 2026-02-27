@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from dotenv import load_dotenv
 from datetime import datetime, time, timedelta
 from pathlib import Path
@@ -116,11 +117,10 @@ async def autopost_loop(bot: Bot, chat_id: int, cache_path: Path, event: asyncio
                     orig = get_original_chat_title()
                     chat = await bot.get_chat(chat_id)
                     current_title = chat.title or ""
-                    # remove leading emoji if it matches known fragment emojis
-                    frag_emojis = {e for _, e in FRAGMENTS}
-                    cleaned = current_title
-                    if cleaned and cleaned[0] in frag_emojis:
-                        cleaned = cleaned[1:].lstrip()
+
+                    # Remove all leading non-word characters (emojis, punctuation, etc.)
+                    # Keep the first non-empty word-like portion as the canonical title.
+                    cleaned = re.sub(r'^[^\w]+', '', current_title).lstrip()
 
                     # If no original saved yet, or the current cleaned title
                     # differs from saved original (i.e. manual change), update it.
@@ -128,8 +128,8 @@ async def autopost_loop(bot: Bot, chat_id: int, cache_path: Path, event: asyncio
                         orig = cleaned
                         set_original_chat_title(orig)
 
-                    # Determine emoji used in the autopost text and set title
-                    new_emoji = text[0] if text else None
+                    # Use the selected emoji (computed earlier) when setting title.
+                    new_emoji = locals().get('selected_emoji')
                     if new_emoji:
                         new_title = f"{new_emoji} {orig}" if orig else new_emoji
                         try:

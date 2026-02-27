@@ -1,13 +1,21 @@
-"""Simple fragment->emoji mapping for holidays.
+"""Fragment->emoji mapping for holidays backed by a JSON file.
 
-This module uses a straightforward ordered list of substring fragments
-mapped to emojis. The first matching fragment is used. Keep this file
-simple so it's easy to extend with more fragments.
+On import this module attempts to load `holiday_emojis.json` located
+next to the module. If the file is missing or invalid, a default
+mapping is written to disk and used.
 """
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Any
+from pathlib import Path
+import json
+import logging
 
-# Ordered list of (fragment, emoji). Fragments are checked in order.
-FRAGMENTS: List[Tuple[str, str]] = [
+LOG = logging.getLogger(__name__)
+
+# Path to JSON file stored next to this module
+_JSON_PATH = Path(__file__).parent / "holiday_emojis.json"
+
+# Default fragments (kept in code so we can bootstrap the JSON file)
+_DEFAULT_FRAGMENTS: List[Tuple[str, str]] = [
     ("23 февр", "🪖"),
     ("23 февра", "🪖"),
     ("отечест", "🪖"),
@@ -27,14 +35,49 @@ FRAGMENTS: List[Tuple[str, str]] = [
     ("юбилей", "🎂"),
     ("город", "🏙️"),
     ("флаг", "🏳️"),
-    ("росси", "🇷🇺"),
-    ("россия", "🇷🇺"),
     ("язык", "🗣️"),
     ("экскурс", "🧭"),
     ("фельдшер", "🩺"),
     ("полярн", "🐻‍❄️"),
     ("оптимист", "😄"),
 ]
+
+
+def _write_default_json(path: Path) -> None:
+    try:
+        data: List[Tuple[str, str]] = _DEFAULT_FRAGMENTS
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        LOG.info("Wrote default emoji fragments to %s", path)
+    except OSError:
+        LOG.exception("Failed to write default emoji JSON to %s", path)
+
+
+def _load_fragments(path: Path) -> List[Tuple[str, str]]:
+    if not path.exists():
+        _write_default_json(path)
+        return list(_DEFAULT_FRAGMENTS)
+
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        # Expecting list of [frag, emoji] or list of objects; normalize both
+        fragments: List[Tuple[str, str]] = []
+        if isinstance(raw, list):
+            for item in raw:
+                if isinstance(item, list) and len(item) >= 2:
+                    fragments.append((str(item[0]), str(item[1])))
+                elif isinstance(item, dict) and "frag" in item and "emoji" in item:
+                    fragments.append((str(item["frag"]), str(item["emoji"])))
+        if not fragments:
+            LOG.warning("Emoji JSON loaded but contains no valid fragments, using defaults")
+            return list(_DEFAULT_FRAGMENTS)
+        return fragments
+    except Exception:
+        LOG.exception("Failed to load emoji JSON from %s, using defaults", path)
+        return list(_DEFAULT_FRAGMENTS)
+
+
+# Public FRAGMENTS variable: ordered list of (fragment, emoji)
+FRAGMENTS: List[Tuple[str, str]] = _load_fragments(_JSON_PATH)
 
 
 def emoji_for_holiday(name: str) -> Optional[str]:
